@@ -1,4 +1,3 @@
-
 import { Product, StockStatus } from "@/types/product";
 import { retailers } from "./retailers";
 
@@ -53,6 +52,54 @@ export const brands = [
   "Cooler Master"
 ];
 
+export const countries = [
+  {
+    code: 'US',
+    name: 'United States',
+    currency: 'USD'
+  },
+  {
+    code: 'UK',
+    name: 'United Kingdom',
+    currency: 'GBP'
+  }
+];
+
+// Convert USD price to GBP (simplified conversion for mock data)
+const usdToGbp = (usdPrice: number): number => {
+  const conversionRate = 0.78; // Approximate USD to GBP conversion rate
+  return Math.round(usdPrice * conversionRate);
+};
+
+// Helper to generate prices for both countries
+const generatePrices = (usdMinPrice: number, usdMaxPrice: number) => {
+  return retailers.map(retailer => {
+    const usdPrice = randomPrice(usdMinPrice, usdMaxPrice);
+    const gbpPrice = usdToGbp(usdPrice);
+    const status = randomStatus();
+    const lastUpdated = randomDate();
+    
+    return [
+      {
+        retailerId: retailer.id,
+        price: usdPrice,
+        currency: 'USD',
+        status,
+        lastUpdated,
+        url: `${retailer.url}/us/product`
+      },
+      {
+        retailerId: retailer.id,
+        price: gbpPrice,
+        currency: 'GBP',
+        status,
+        lastUpdated,
+        url: `${retailer.url}/uk/product`
+      }
+    ];
+  }).flat();
+};
+
 // Mock product data
 export const mockProducts: Product[] = [
   {
@@ -63,14 +110,7 @@ export const mockProducts: Product[] = [
     category: "Graphics Cards",
     image: "https://assets.nvidia.partners/images/p/4090/nvidia-geforce-rtx-4090-product-photo-001.png",
     description: "The NVIDIA GeForce RTX 4090 is the fastest GPU on the planet. It features 4th-gen Tensor Cores for DLSS and AI, 3rd-gen RT Cores for ray tracing, and NVIDIA Ada architecture.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(1600, 2000),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rtx-4090`
-    }))
+    prices: generatePrices(1600, 2000)
   },
   {
     id: "2",
@@ -80,14 +120,7 @@ export const mockProducts: Product[] = [
     category: "Graphics Cards",
     image: "https://m.media-amazon.com/images/I/61dYrUFeXrL.jpg",
     description: "The RTX 4080 delivers the ultra performance and features that enthusiast gamers and creators demand. Powered by the NVIDIA Ada Lovelace architecture.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(1100, 1300),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rtx-4080`
-    }))
+    prices: generatePrices(1100, 1300)
   },
   {
     id: "3",
@@ -97,14 +130,7 @@ export const mockProducts: Product[] = [
     category: "Graphics Cards",
     image: "https://m.media-amazon.com/images/I/71iKpn9OdGL.jpg",
     description: "The GeForce RTX 4070 Ti is built on the ultra-efficient NVIDIA Ada Lovelace architecture, delivering fast gaming performance and creation.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(800, 900),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rtx-4070-ti`
-    }))
+    prices: generatePrices(800, 900)
   },
   {
     id: "4",
@@ -114,14 +140,7 @@ export const mockProducts: Product[] = [
     category: "Graphics Cards",
     image: "https://www.amd.com/system/files/2022-11/1728141-amd-radeon-7900xtx-left-1260x709.png",
     description: "The AMD Radeon RX 7900 XTX graphics card, powered by AMD RDNA 3 architecture, delivers exceptional 4K gaming with AMD FSR.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(900, 1100),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rx-7900-xtx`
-    }))
+    prices: generatePrices(900, 1100)
   },
   {
     id: "5",
@@ -131,14 +150,27 @@ export const mockProducts: Product[] = [
     category: "Graphics Cards",
     image: "https://www.amd.com/system/files/2022-11/1728144-amd-radeon-7900xt-left-1260x709.png",
     description: "The AMD Radeon RX 7900 XT graphics card brings exceptional performance for 4K gaming with unparalleled visual fidelity.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(800, 950),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rx-7900-xt`
-    }))
+    prices: generatePrices(800, 950)
+  },
+  {
+    id: "13",
+    name: "Radeon RX 7800 XT",
+    brand: "AMD",
+    model: "Reference",
+    category: "Graphics Cards",
+    image: "https://www.amd.com/system/files/2023-08/rgb-7800-xt-angled-1260x709.png",
+    description: "The AMD Radeon RX 7800 XT graphics card, powered by AMD RDNA 3 architecture, delivers exceptional 1440p gaming performance with 16GB GDDR6 memory.",
+    prices: generatePrices(500, 600)
+  },
+  {
+    id: "14",
+    name: "Radeon RX 7700 XT",
+    brand: "AMD",
+    model: "Reference",
+    category: "Graphics Cards",
+    image: "https://www.amd.com/system/files/2023-08/rgb-7700-xt-angled-1260x709.png",
+    description: "The AMD Radeon RX 7700 XT graphics card features 12GB GDDR6 memory and delivers incredible 1440p gaming performance with high frame rates.",
+    prices: generatePrices(450, 500)
   },
   {
     id: "6",
@@ -148,14 +180,7 @@ export const mockProducts: Product[] = [
     category: "Processors",
     image: "https://www.notebookcheck.net/fileadmin/Notebooks/News/_nc3/Intel_Core_i9_14900K_box_.jpg",
     description: "The Intel Core i9-14900K is Intel's flagship desktop processor featuring 24 cores (8 P-cores and 16 E-cores) with up to 5.8 GHz clock speed.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(550, 650),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/i9-14900k`
-    }))
+    prices: generatePrices(550, 650)
   },
   {
     id: "7",
@@ -165,14 +190,7 @@ export const mockProducts: Product[] = [
     category: "Processors",
     image: "https://m.media-amazon.com/images/I/61TmM+1u9vL.jpg",
     description: "The AMD Ryzen 9 7950X features 16 cores and 32 threads, with a boost clock up to 5.7 GHz, built on AMD's Zen 4 architecture.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(550, 650),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/ryzen-9-7950x`
-    }))
+    prices: generatePrices(550, 650)
   },
   {
     id: "8",
@@ -182,14 +200,7 @@ export const mockProducts: Product[] = [
     category: "Motherboards",
     image: "https://dlcdnwebimgs.asus.com/gain/BE94EB89-0761-4C8D-8D16-24B7BC33071F/w1000/h732",
     description: "The ROG Maximus Z790 Hero motherboard offers cutting-edge performance for Intel 13th and 14th Gen CPUs with advanced cooling and connectivity.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(550, 650),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/rog-maximus-z790-hero`
-    }))
+    prices: generatePrices(550, 650)
   },
   {
     id: "9",
@@ -199,14 +210,7 @@ export const mockProducts: Product[] = [
     category: "Memory",
     image: "https://www.gskill.com/img/overview/trident-z5-rgb-ddr5/classic-design-kv.jpg",
     description: "G.SKILL Trident Z5 RGB DDR5-6400 CL32 32GB (2x16GB) dual-channel memory kit featuring the award-winning Trident heatspreader design.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(180, 240),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/trident-z5-rgb`
-    }))
+    prices: generatePrices(180, 240)
   },
   {
     id: "10",
@@ -216,14 +220,7 @@ export const mockProducts: Product[] = [
     category: "Storage",
     image: "https://semiconductor.samsung.com/resources/image/content/ssd/990pro/pd/990PRO_pd_01.jpg",
     description: "The Samsung 990 PRO offers blazing fast PCIe 4.0 performance with sequential read speeds up to 7,450 MB/s and writes up to 6,900 MB/s.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(170, 210),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/samsung-990-pro`
-    }))
+    prices: generatePrices(170, 210)
   },
   {
     id: "11",
@@ -233,14 +230,7 @@ export const mockProducts: Product[] = [
     category: "Cases",
     image: "https://nzxt.com/assets/cms/34299/1683049658-h9elitethumbnailwhite.png?auto=format&fit=crop&h=1000&w=1000",
     description: "The NZXT H9 Elite features tempered glass panels on the front and side, with an improved internal layout for superior airflow and ease of building.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(200, 250),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/nzxt-h9-elite`
-    }))
+    prices: generatePrices(200, 250)
   },
   {
     id: "12",
@@ -250,13 +240,6 @@ export const mockProducts: Product[] = [
     category: "Power Supplies",
     image: "https://m.media-amazon.com/images/I/712EFbD9OHL.jpg",
     description: "The Corsair RM1000x SHIFT ATX 3.0 power supply delivers 80 PLUS Gold efficiency with fully modular cabling with side-facing connections.",
-    prices: retailers.map(retailer => ({
-      retailerId: retailer.id,
-      price: randomPrice(180, 220),
-      currency: "USD",
-      status: randomStatus(),
-      lastUpdated: randomDate(),
-      url: `${retailer.url}/corsair-rm1000x-shift`
-    }))
+    prices: generatePrices(180, 220)
   }
 ];

@@ -1,11 +1,12 @@
 
-import { categories, brands } from "@/data/mockProducts";
+import { categories, brands, countries } from "@/data/mockProducts";
 import { ProductFilter } from "@/types/product";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { FilterX, SlidersHorizontal } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FilterX, SlidersHorizontal, Globe } from "lucide-react";
 
 interface FilterSidebarProps {
   filter: ProductFilter;
@@ -25,12 +26,17 @@ const FilterSidebar = ({ filter, onChange }: FilterSidebarProps) => {
     onChange({ ...filter, inStockOnly: checked });
   };
 
+  const handleCountryChange = (country: 'US' | 'UK') => {
+    onChange({ ...filter, country });
+  };
+
   const resetFilters = () => {
     onChange({
       search: filter.search,
       category: null,
       brand: null,
-      inStockOnly: false
+      inStockOnly: false,
+      country: filter.country
     });
   };
 
@@ -56,6 +62,30 @@ const FilterSidebar = ({ filter, onChange }: FilterSidebarProps) => {
       <Separator className="mb-4" />
       
       <div className="space-y-4">
+        <div>
+          <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Region
+          </h4>
+          <RadioGroup
+            value={filter.country}
+            onValueChange={(value) => handleCountryChange(value as 'US' | 'UK')}
+            className="space-y-1"
+          >
+            {countries.map((country) => (
+              <div key={country.code} className="flex items-center space-x-2">
+                <RadioGroupItem 
+                  value={country.code} 
+                  id={`country-${country.code}`}
+                />
+                <Label htmlFor={`country-${country.code}`} className="text-sm">
+                  {country.name} ({country.currency})
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+        
         <div>
           <h4 className="font-medium text-sm mb-2">Availability</h4>
           <div className="flex items-center space-x-2">

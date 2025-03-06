@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { mockProducts } from "@/data/mockProducts";
 import { Product, ProductFilter } from "@/types/product";
@@ -18,6 +17,7 @@ const Index = () => {
     category: null,
     brand: null,
     inStockOnly: false,
+    country: "US",
   });
 
   useEffect(() => {
@@ -31,11 +31,23 @@ const Index = () => {
   }, []);
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
+    // When displaying a product, filter its prices to show only those for the selected country
+    const filteredProduct = {
+      ...product,
+      prices: product.prices.filter(price => price.currency === (filter.country === 'UK' ? 'GBP' : 'USD'))
+    };
+    
+    setSelectedProduct(filteredProduct);
     setDetailsOpen(true);
   };
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products.map(product => {
+    // For display in the list, filter each product's prices to the selected country
+    return {
+      ...product,
+      prices: product.prices.filter(price => price.currency === (filter.country === 'UK' ? 'GBP' : 'USD'))
+    };
+  }).filter((product) => {
     // Text search filter
     if (
       filter.search &&
@@ -102,6 +114,7 @@ const Index = () => {
               <h2 className="text-xl font-bold">Available Products</h2>
               <p className="text-sm text-muted-foreground">
                 {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"} found
+                <span className="ml-2 text-xs">({filter.country === 'US' ? 'USD' : 'GBP'})</span>
               </p>
             </div>
             
@@ -125,6 +138,7 @@ const Index = () => {
                     category: null,
                     brand: null,
                     inStockOnly: false,
+                    country: filter.country
                   }),
                 }}
               />
