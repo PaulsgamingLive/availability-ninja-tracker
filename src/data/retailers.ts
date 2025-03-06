@@ -4,26 +4,26 @@ import { Retailer } from "@/types/product";
 export const retailers: Retailer[] = [
   {
     id: "amazon",
-    name: "Amazon",
-    url: "https://www.amazon.com",
+    name: "Amazon UK",
+    url: "https://www.amazon.co.uk",
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png"
   },
   {
-    id: "newegg",
-    name: "Newegg",
-    url: "https://www.newegg.com",
-    logo: "https://c1.neweggimages.com/WebResource/Themes/2005/Nest/logo_424x210.png"
+    id: "currys",
+    name: "Currys",
+    url: "https://www.currys.co.uk",
+    logo: "https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/Currys_2021_logo.svg/1200px-Currys_2021_logo.svg.png"
   },
   {
-    id: "bestbuy",
-    name: "Best Buy",
-    url: "https://www.bestbuy.com",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/1280px-Best_Buy_Logo.svg.png"
+    id: "scan",
+    name: "Scan",
+    url: "https://www.scan.co.uk",
+    logo: "https://www.scan.co.uk/images/infopages/scan_3xs_logo.png"
   },
   {
-    id: "microcenter",
-    name: "Micro Center",
-    url: "https://www.microcenter.com",
-    logo: "https://logos-world.net/wp-content/uploads/2022/01/Micro-Center-Logo.png"
+    id: "overclockers",
+    name: "Overclockers UK",
+    url: "https://www.overclockers.co.uk",
+    logo: "https://www.overclockers.co.uk/media/image/ocuk_logo.png"
   }
 ];

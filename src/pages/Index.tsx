@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { mockProducts } from "@/data/mockProducts";
 import { Product, ProductFilter } from "@/types/product";
@@ -17,13 +18,18 @@ const Index = () => {
     category: null,
     brand: null,
     inStockOnly: false,
-    country: "US",
   });
 
   useEffect(() => {
-    // Simulate loading data
+    // Simulate loading data - filter for UK prices only
     const timer = setTimeout(() => {
-      setProducts(mockProducts);
+      // Filter products to only include UK prices (GBP currency)
+      const ukProducts = mockProducts.map(product => ({
+        ...product,
+        prices: product.prices.filter(price => price.currency === 'GBP')
+      }));
+      
+      setProducts(ukProducts);
       setLoading(false);
     }, 1000);
 
@@ -31,23 +37,11 @@ const Index = () => {
   }, []);
 
   const handleProductClick = (product: Product) => {
-    // When displaying a product, filter its prices to show only those for the selected country
-    const filteredProduct = {
-      ...product,
-      prices: product.prices.filter(price => price.currency === (filter.country === 'UK' ? 'GBP' : 'USD'))
-    };
-    
-    setSelectedProduct(filteredProduct);
+    setSelectedProduct(product);
     setDetailsOpen(true);
   };
 
-  const filteredProducts = products.map(product => {
-    // For display in the list, filter each product's prices to the selected country
-    return {
-      ...product,
-      prices: product.prices.filter(price => price.currency === (filter.country === 'UK' ? 'GBP' : 'USD'))
-    };
-  }).filter((product) => {
+  const filteredProducts = products.filter((product) => {
     // Text search filter
     if (
       filter.search &&
@@ -114,7 +108,7 @@ const Index = () => {
               <h2 className="text-xl font-bold">Available Products</h2>
               <p className="text-sm text-muted-foreground">
                 {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"} found
-                <span className="ml-2 text-xs">({filter.country === 'US' ? 'USD' : 'GBP'})</span>
+                <span className="ml-2 text-xs">(GBP)</span>
               </p>
             </div>
             
@@ -138,7 +132,6 @@ const Index = () => {
                     category: null,
                     brand: null,
                     inStockOnly: false,
-                    country: filter.country
                   }),
                 }}
               />

@@ -33,11 +33,10 @@ export type ProductFilter = {
   category: string | null;
   brand: string | null;
   inStockOnly: boolean;
-  country: 'US' | 'UK';
 };
 
 export type Country = {
-  code: 'US' | 'UK';
+  code: 'UK';
   name: string;
   currency: string;
 };

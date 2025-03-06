@@ -54,50 +54,28 @@ export const brands = [
 
 export const countries = [
   {
-    code: 'US',
-    name: 'United States',
-    currency: 'USD'
-  },
-  {
     code: 'UK',
     name: 'United Kingdom',
     currency: 'GBP'
   }
 ];
 
-// Convert USD price to GBP (simplified conversion for mock data)
-const usdToGbp = (usdPrice: number): number => {
-  const conversionRate = 0.78; // Approximate USD to GBP conversion rate
-  return Math.round(usdPrice * conversionRate);
-};
-
-// Helper to generate prices for both countries
-const generatePrices = (usdMinPrice: number, usdMaxPrice: number) => {
+// Helper to generate prices for UK only
+const generatePrices = (gbpMinPrice: number, gbpMaxPrice: number) => {
   return retailers.map(retailer => {
-    const usdPrice = randomPrice(usdMinPrice, usdMaxPrice);
-    const gbpPrice = usdToGbp(usdPrice);
+    const gbpPrice = randomPrice(gbpMinPrice, gbpMaxPrice);
     const status = randomStatus();
     const lastUpdated = randomDate();
     
-    return [
-      {
-        retailerId: retailer.id,
-        price: usdPrice,
-        currency: 'USD',
-        status,
-        lastUpdated,
-        url: `${retailer.url}/us/product`
-      },
-      {
-        retailerId: retailer.id,
-        price: gbpPrice,
-        currency: 'GBP',
-        status,
-        lastUpdated,
-        url: `${retailer.url}/uk/product`
-      }
-    ];
-  }).flat();
+    return {
+      retailerId: retailer.id,
+      price: gbpPrice,
+      currency: 'GBP',
+      status,
+      lastUpdated,
+      url: `${retailer.url}/product`
+    };
+  });
 };
 
 // Mock product data
