@@ -1,3 +1,4 @@
+
 import { Product, StockStatus } from "@/types/product";
 import { retailers } from "./retailers";
 
@@ -80,6 +81,26 @@ const generatePrices = (gbpMinPrice: number, gbpMaxPrice: number) => {
 
 // Mock product data
 export const mockProducts: Product[] = [
+  {
+    id: "15",
+    name: "GeForce RTX 9070",
+    brand: "NVIDIA",
+    model: "Founders Edition",
+    category: "Graphics Cards",
+    image: "https://cdn.wccftech.com/wp-content/uploads/2024/01/NVIDIA-GeForce-RTX-SUPER-Graphics-Card_1.jpg",
+    description: "The GeForce RTX 9070 delivers incredible performance and ray tracing capabilities for gamers and creators with the latest NVIDIA Blackwell architecture.",
+    prices: generatePrices(1200, 1300)
+  },
+  {
+    id: "16",
+    name: "GeForce RTX 9070 XT",
+    brand: "NVIDIA",
+    model: "Founders Edition",
+    category: "Graphics Cards",
+    image: "https://cdn.wccftech.com/wp-content/uploads/2024/05/nvidia-blackwell-graphics-cards_3.jpg",
+    description: "The GeForce RTX 9070 XT pushes performance even further with enhanced ray tracing cores and AI-powered features based on the NVIDIA Blackwell architecture.",
+    prices: generatePrices(1400, 1500)
+  },
   {
     id: "1",
     name: "GeForce RTX 4090",

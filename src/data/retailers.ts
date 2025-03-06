@@ -25,5 +25,17 @@ export const retailers: Retailer[] = [
     name: "Overclockers UK",
     url: "https://www.overclockers.co.uk",
     logo: "https://www.overclockers.co.uk/media/image/ocuk_logo.png"
+  },
+  {
+    id: "awdit",
+    name: "AWD-IT",
+    url: "https://www.awd-it.co.uk",
+    logo: "https://www.awd-it.co.uk/pub/media/logo/stores/1/awd_logo.png"
+  },
+  {
+    id: "novatech",
+    name: "Novatech",
+    url: "https://www.novatech.co.uk",
+    logo: "https://www.novatech.co.uk/assets/templates/novatech/images/logo.svg"
   }
 ];
