@@ -11,38 +11,67 @@ interface ScrapingResult {
 }
 
 export class PriceScraperService {
-  // In a real application, this would be a backend API call
-  // Currently using mock data with simulated network delay
+  // Proxy API endpoint for web scraping
+  private static PROXY_API = "https://api.allorigins.win/raw?url=";
+  
   static async scrapeProductPrices(productId: string, productName: string): Promise<ScrapingResult> {
     console.log(`Scraping prices for ${productName} (ID: ${productId})...`);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create an array to store real scraped prices
+      const scrapedPrices: ProductPrice[] = [];
       
-      // Generate random prices for each retailer (simulation)
-      const scrapedPrices: ProductPrice[] = retailers.map(retailer => {
-        // Generate a random price within a plausible range, varying by retailer
-        const basePrice = this.getBasePrice(productName);
-        const retailerVariance = this.getRetailerVariance(retailer.id);
-        const randomFactor = 0.95 + (Math.random() * 0.15); // ±7.5% variance
-        
-        const price = Math.round(basePrice * retailerVariance * randomFactor);
-        
-        // Randomize stock status with weighted probability
-        const status = this.getRandomStockStatus(retailer.id);
-        
+      // Process each retailer
+      for (const retailer of retailers) {
+        try {
+          // Construct search URL based on retailer and product name
+          const searchQuery = encodeURIComponent(productName.replace(/\s+/g, '+'));
+          const searchUrl = this.getRetailerSearchUrl(retailer.id, searchQuery);
+          
+          if (!searchUrl) continue;
+          
+          // Use proxy to fetch the page content
+          const proxyUrl = `${this.PROXY_API}${encodeURIComponent(searchUrl)}`;
+          console.log(`Fetching from: ${searchUrl} via proxy`);
+          
+          const response = await fetch(proxyUrl);
+          
+          if (!response.ok) {
+            console.warn(`Failed to fetch from ${retailer.name}: ${response.statusText}`);
+            continue;
+          }
+          
+          const html = await response.text();
+          
+          // Extract price and stock status from the HTML
+          const { price, status } = this.extractPriceAndStatus(html, retailer.id);
+          
+          if (price > 0) {
+            scrapedPrices.push({
+              retailerId: retailer.id,
+              price: price,
+              currency: 'GBP',
+              status: status,
+              lastUpdated: new Date().toISOString(),
+              url: searchUrl
+            });
+            console.log(`Found price at ${retailer.name}: £${price}, Status: ${status}`);
+          }
+        } catch (retailerError) {
+          console.error(`Error scraping from ${retailer.name}:`, retailerError);
+          // Continue with other retailers even if one fails
+        }
+      }
+      
+      if (scrapedPrices.length === 0) {
         return {
-          retailerId: retailer.id,
-          price: price,
-          currency: 'GBP',
-          status: status,
-          lastUpdated: new Date().toISOString(),
-          url: `${retailer.url}/product/${productId}`
+          success: false,
+          message: "Couldn't find any prices for this product",
+          prices: []
         };
-      });
+      }
       
-      console.log(`Successfully scraped prices for ${productName}:`, scrapedPrices);
+      console.log(`Successfully scraped ${scrapedPrices.length} prices for ${productName}`);
       
       return {
         success: true,
@@ -59,74 +88,172 @@ export class PriceScraperService {
     }
   }
   
-  // Helper method to get a base price for a product based on its name
-  private static getBasePrice(productName: string): number {
-    if (productName.includes("9070 XT")) return 1450;
-    if (productName.includes("9070")) return 1250;
-    if (productName.includes("4090")) return 1800;
-    if (productName.includes("4080")) return 1200;
-    if (productName.includes("4070")) return 850;
-    if (productName.includes("7900 XTX")) return 1000;
-    if (productName.includes("7900 XT")) return 900;
-    if (productName.includes("7800 XT")) return 550;
-    if (productName.includes("7700 XT")) return 480;
-    if (productName.includes("Core i9")) return 600;
-    if (productName.includes("Ryzen 9")) return 590;
-    if (productName.includes("ROG Maximus")) return 600;
-    if (productName.includes("Trident Z5")) return 200;
-    if (productName.includes("Samsung 990")) return 190;
-    if (productName.includes("NZXT H9")) return 230;
-    if (productName.includes("RM1000x")) return 200;
-    return 500; // Default price
-  }
-  
-  // Simulate different pricing strategies by retailer
-  private static getRetailerVariance(retailerId: string): number {
+  // Helper to get the search URL for a specific retailer
+  private static getRetailerSearchUrl(retailerId: string, searchQuery: string): string {
     switch (retailerId) {
-      case "amazon": return 1.02; // Slightly higher
-      case "currys": return 1.05; // Higher
-      case "scan": return 0.98;   // Slightly lower
-      case "overclockers": return 1.00; // Average
-      case "awdit": return 0.96;  // Lower
-      case "novatech": return 0.99; // Slightly lower
-      default: return 1.00;
+      case "amazon":
+        return `https://www.amazon.co.uk/s?k=${searchQuery}`;
+      case "currys":
+        return `https://www.currys.co.uk/search?q=${searchQuery}`;
+      case "scan":
+        return `https://www.scan.co.uk/search?q=${searchQuery}`;
+      case "overclockers":
+        return `https://www.overclockers.co.uk/search?sSearch=${searchQuery}`;
+      case "awdit":
+        return `https://www.awd-it.co.uk/catalogsearch/result/?q=${searchQuery}`;
+      case "novatech":
+        return `https://www.novatech.co.uk/search/?q=${searchQuery}`;
+      default:
+        return "";
     }
   }
   
-  // Generate random stock status with retailer-specific weighting
-  private static getRandomStockStatus(retailerId: string): StockStatus {
-    const rand = Math.random();
+  // Extract price and stock status from HTML based on retailer-specific selectors
+  private static extractPriceAndStatus(html: string, retailerId: string): { price: number, status: StockStatus } {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
     
-    // Different retailers have different stock probabilities
-    const inStockProbability = this.getInStockProbability(retailerId);
-    const limitedStockProbability = this.getLimitedStockProbability(retailerId);
+    let price = 0;
+    let status: StockStatus = "UNKNOWN";
     
-    if (rand < inStockProbability) return "IN_STOCK";
-    if (rand < inStockProbability + limitedStockProbability) return "LIMITED_STOCK";
-    return "OUT_OF_STOCK";
-  }
-  
-  private static getInStockProbability(retailerId: string): number {
+    // Retailer-specific selectors
     switch (retailerId) {
-      case "amazon": return 0.5;      // 50% chance of in stock
-      case "currys": return 0.4;      // 40% chance
-      case "scan": return 0.35;       // 35% chance
-      case "overclockers": return 0.3; // 30% chance
-      case "awdit": return 0.25;      // 25% chance
-      case "novatech": return 0.3;    // 30% chance
-      default: return 0.3;
+      case "amazon":
+        // Amazon price extraction
+        const amazonPriceElement = doc.querySelector('.a-price-whole');
+        const amazonFractionElement = doc.querySelector('.a-price-fraction');
+        
+        if (amazonPriceElement && amazonFractionElement) {
+          const wholePart = amazonPriceElement.textContent?.replace(/[^0-9]/g, '') || '0';
+          const fractionPart = amazonFractionElement.textContent?.replace(/[^0-9]/g, '') || '00';
+          price = parseFloat(`${wholePart}.${fractionPart}`);
+          
+          // Check stock status
+          const availabilityElement = doc.querySelector('#availability');
+          if (availabilityElement) {
+            const text = availabilityElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('limited')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock') || text.includes('unavailable')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
+        
+      case "currys":
+        // Currys price extraction
+        const currysPriceElement = doc.querySelector('.price');
+        if (currysPriceElement) {
+          const priceText = currysPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
+          price = parseFloat(priceText);
+          
+          // Check stock status
+          const stockElement = doc.querySelector('.stockStatus');
+          if (stockElement) {
+            const text = stockElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('limited')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
+        
+      case "scan":
+        // Scan price extraction
+        const scanPriceElement = doc.querySelector('.price');
+        if (scanPriceElement) {
+          const priceText = scanPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
+          price = parseFloat(priceText);
+          
+          // Check stock status
+          const stockElement = doc.querySelector('.stock-message');
+          if (stockElement) {
+            const text = stockElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('limited')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
+        
+      case "overclockers":
+        // Overclockers price extraction
+        const ocukPriceElement = doc.querySelector('.product--price');
+        if (ocukPriceElement) {
+          const priceText = ocukPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
+          price = parseFloat(priceText);
+          
+          // Check stock status
+          const stockElement = doc.querySelector('.availability--text');
+          if (stockElement) {
+            const text = stockElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('low stock')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock') || text.includes('pre-order')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
+        
+      case "awdit":
+        // AWD-IT price extraction
+        const awdPriceElement = doc.querySelector('.price');
+        if (awdPriceElement) {
+          const priceText = awdPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
+          price = parseFloat(priceText);
+          
+          // Check stock status
+          const stockElement = doc.querySelector('.stock');
+          if (stockElement) {
+            const text = stockElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('low stock')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
+        
+      case "novatech":
+        // Novatech price extraction
+        const novatechPriceElement = doc.querySelector('.product-price');
+        if (novatechPriceElement) {
+          const priceText = novatechPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
+          price = parseFloat(priceText);
+          
+          // Check stock status
+          const stockElement = doc.querySelector('.stock-info');
+          if (stockElement) {
+            const text = stockElement.textContent?.toLowerCase() || '';
+            if (text.includes('in stock')) {
+              status = "IN_STOCK";
+            } else if (text.includes('low stock')) {
+              status = "LIMITED_STOCK";
+            } else if (text.includes('out of stock')) {
+              status = "OUT_OF_STOCK";
+            }
+          }
+        }
+        break;
     }
-  }
-  
-  private static getLimitedStockProbability(retailerId: string): number {
-    switch (retailerId) {
-      case "amazon": return 0.2;      // 20% chance of limited stock
-      case "currys": return 0.3;      // 30% chance
-      case "scan": return 0.25;       // 25% chance
-      case "overclockers": return 0.3; // 30% chance
-      case "awdit": return 0.35;      // 35% chance
-      case "novatech": return 0.3;    // 30% chance
-      default: return 0.2;
-    }
+    
+    return { price, status };
   }
 }
