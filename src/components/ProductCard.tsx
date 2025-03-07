@@ -17,6 +17,7 @@ import {
   getBestPrice, 
   getOverallStockStatus 
 } from "@/utils/stockUtils";
+import { Link } from "react-router-dom";
 
 interface ProductCardProps {
   product: Product;
@@ -75,10 +76,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </CardContent>
       <CardFooter className="pt-0 pb-4 px-6">
         <Button className="w-full gap-2" variant="outline" asChild>
-          <a href="#product-details" className="flex items-center">
+          <Link to={`/product/${product.id}`} className="flex items-center">
             <span>View Details</span>
             <Info className="h-4 w-4" />
-          </a>
+          </Link>
         </Button>
       </CardFooter>
     </Card>

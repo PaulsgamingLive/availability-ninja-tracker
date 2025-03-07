@@ -5,14 +5,11 @@ import { Product, ProductFilter } from "@/types/product";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import FilterSidebar from "@/components/FilterSidebar";
-import ProductDetailDialog from "@/components/ProductDetailDialog";
 import EmptyState from "@/components/EmptyState";
 
 const Index = () => {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [filter, setFilter] = useState<ProductFilter>({
     search: "",
     category: null,
@@ -35,11 +32,6 @@ const Index = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setDetailsOpen(true);
-  };
 
   const filteredProducts = products.filter((product) => {
     // Text search filter
@@ -74,23 +66,6 @@ const Index = () => {
 
     return true;
   });
-
-  // This is a workaround for the missing ProductDetailDialog.
-  // When a card is clicked, it will scroll to this div with the product details
-  useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === "#product-details") {
-        const product = products[0]; // Just use the first product for demonstration
-        if (product) {
-          setSelectedProduct(product);
-          setDetailsOpen(true);
-        }
-      }
-    };
-
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [products]);
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-12">
@@ -138,11 +113,7 @@ const Index = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
-                  <div 
-                    key={product.id} 
-                    onClick={() => handleProductClick(product)}
-                    className="cursor-pointer"
-                  >
+                  <div key={product.id}>
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -151,12 +122,6 @@ const Index = () => {
           </div>
         </div>
       </main>
-      
-      <ProductDetailDialog 
-        product={selectedProduct} 
-        isOpen={detailsOpen} 
-        onClose={() => setDetailsOpen(false)} 
-      />
     </div>
   );
 };
