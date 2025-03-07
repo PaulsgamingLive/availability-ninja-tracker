@@ -83,37 +83,37 @@ const generatePrices = (gbpMinPrice: number, gbpMaxPrice: number) => {
 export const mockProducts: Product[] = [
   {
     id: "15",
-    name: "GeForce RTX 9070",
+    name: "RTX 9070",
     brand: "NVIDIA",
     model: "Founders Edition",
     category: "Graphics Cards",
     image: "https://cdn.wccftech.com/wp-content/uploads/2024/01/NVIDIA-GeForce-RTX-SUPER-Graphics-Card_1.jpg",
-    description: "The GeForce RTX 9070 delivers incredible performance and ray tracing capabilities for gamers and creators with the latest NVIDIA Blackwell architecture.",
+    description: "The RTX 9070 delivers incredible performance and ray tracing capabilities for gamers and creators with the latest NVIDIA Blackwell architecture.",
     prices: generatePrices(1200, 1300)
   },
   {
     id: "16",
-    name: "GeForce RTX 9070 XT",
+    name: "RTX 9070 XT",
     brand: "NVIDIA",
     model: "Founders Edition",
     category: "Graphics Cards",
     image: "https://cdn.wccftech.com/wp-content/uploads/2024/05/nvidia-blackwell-graphics-cards_3.jpg",
-    description: "The GeForce RTX 9070 XT pushes performance even further with enhanced ray tracing cores and AI-powered features based on the NVIDIA Blackwell architecture.",
+    description: "The RTX 9070 XT pushes performance even further with enhanced ray tracing cores and AI-powered features based on the NVIDIA Blackwell architecture.",
     prices: generatePrices(1400, 1500)
   },
   {
     id: "1",
-    name: "GeForce RTX 4090",
+    name: "RTX 4090",
     brand: "NVIDIA",
     model: "Founders Edition",
     category: "Graphics Cards",
     image: "https://assets.nvidia.partners/images/p/4090/nvidia-geforce-rtx-4090-product-photo-001.png",
-    description: "The NVIDIA GeForce RTX 4090 is the fastest GPU on the planet. It features 4th-gen Tensor Cores for DLSS and AI, 3rd-gen RT Cores for ray tracing, and NVIDIA Ada architecture.",
+    description: "The NVIDIA RTX 4090 is the fastest GPU on the planet. It features 4th-gen Tensor Cores for DLSS and AI, 3rd-gen RT Cores for ray tracing, and NVIDIA Ada architecture.",
     prices: generatePrices(1600, 2000)
   },
   {
     id: "2",
-    name: "GeForce RTX 4080",
+    name: "RTX 4080",
     brand: "NVIDIA",
     model: "Founders Edition",
     category: "Graphics Cards",
@@ -123,12 +123,12 @@ export const mockProducts: Product[] = [
   },
   {
     id: "3",
-    name: "GeForce RTX 4070 Ti",
+    name: "RTX 4070 Ti",
     brand: "NVIDIA",
     model: "Founders Edition",
     category: "Graphics Cards",
     image: "https://m.media-amazon.com/images/I/71iKpn9OdGL.jpg",
-    description: "The GeForce RTX 4070 Ti is built on the ultra-efficient NVIDIA Ada Lovelace architecture, delivering fast gaming performance and creation.",
+    description: "The RTX 4070 Ti is built on the ultra-efficient NVIDIA Ada Lovelace architecture, delivering fast gaming performance and creation.",
     prices: generatePrices(800, 900)
   },
   {
