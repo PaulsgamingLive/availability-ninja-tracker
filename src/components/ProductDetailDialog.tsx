@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelativeTime } from "@/utils/stockUtils";
 import StockStatusBadge from "./StockStatusBadge";
 import { ExternalLink, RefreshCw } from 'lucide-react';
+import { PriceScraperService } from '@/services/PriceScraperService';
+import { toast } from "@/hooks/use-toast";
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -17,23 +19,79 @@ interface ProductDetailDialogProps {
 
 const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogProps) => {
   const [activeTab, setActiveTab] = useState('availability');
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
-  if (!product) {
+  // When the product prop changes, update our local state
+  if (product && (!currentProduct || product.id !== currentProduct.id)) {
+    setCurrentProduct(product);
+  }
+
+  if (!currentProduct) {
     return null;
   }
+
+  const handleRefreshPrices = async () => {
+    if (!currentProduct || isLoading) return;
+    
+    setIsLoading(true);
+    toast({
+      title: "Scraping prices...",
+      description: `Getting latest prices for ${currentProduct.name}`,
+      duration: 3000,
+    });
+    
+    try {
+      const result = await PriceScraperService.scrapeProductPrices(
+        currentProduct.id, 
+        currentProduct.name
+      );
+      
+      if (result.success && result.prices) {
+        // Update our local copy of the product with the new prices
+        setCurrentProduct({
+          ...currentProduct,
+          prices: result.prices
+        });
+        
+        toast({
+          title: "Prices updated",
+          description: `Successfully fetched the latest prices from ${result.prices.length} retailers`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update prices",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error refreshing prices:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{product.name}</DialogTitle>
+          <DialogTitle className="text-xl">{currentProduct.name}</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
           <div className="bg-secondary/50 rounded-lg p-4 flex items-center justify-center md:col-span-1">
             <img 
-              src={product.image} 
-              alt={product.name} 
+              src={currentProduct.image} 
+              alt={currentProduct.name} 
               className="max-h-48 object-contain" 
             />
           </div>
@@ -41,18 +99,18 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
           <div className="md:col-span-2">
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-muted-foreground">{product.brand} {product.model}</p>
-                <h2 className="text-xl font-bold">{product.name}</h2>
+                <p className="text-sm text-muted-foreground">{currentProduct.brand} {currentProduct.model}</p>
+                <h2 className="text-xl font-bold">{currentProduct.name}</h2>
               </div>
               
-              <p className="text-sm">{product.description}</p>
+              <p className="text-sm">{currentProduct.description}</p>
               
               <div className="flex flex-wrap gap-2">
                 <div className="bg-secondary/50 px-3 py-1 rounded-full text-xs">
-                  {product.category}
+                  {currentProduct.category}
                 </div>
                 <div className="bg-secondary/50 px-3 py-1 rounded-full text-xs">
-                  {product.brand}
+                  {currentProduct.brand}
                 </div>
               </div>
             </div>
@@ -77,16 +135,18 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
                 variant="ghost" 
                 size="sm" 
                 className="gap-1 h-8"
+                onClick={handleRefreshPrices}
+                disabled={isLoading}
               >
-                <RefreshCw className="h-4 w-4" />
-                <span>Refresh</span>
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <span>{isLoading ? "Updating..." : "Refresh Prices"}</span>
               </Button>
             </div>
             
             <div className="grid gap-3">
-              {product.prices.map((price, idx) => (
+              {currentProduct.prices.map((price, idx) => (
                 <RetailerStockInfo 
-                  key={idx} 
+                  key={`${price.retailerId}-${idx}`} 
                   price={price} 
                   retailerName={retailers.find(r => r.id === price.retailerId)?.name || 'Unknown'} 
                 />
