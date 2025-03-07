@@ -11,7 +11,7 @@ interface ScrapingResult {
 }
 
 export class PriceScraperService {
-  // Proxy API endpoint for web scraping
+  // Proxy API endpoint for web scraping - helps bypass CORS restrictions
   private static PROXY_API = "https://api.allorigins.win/raw?url=";
   
   static async scrapeProductPrices(productId: string, productName: string): Promise<ScrapingResult> {
@@ -34,7 +34,13 @@ export class PriceScraperService {
           const proxyUrl = `${this.PROXY_API}${encodeURIComponent(searchUrl)}`;
           console.log(`Fetching from: ${searchUrl} via proxy`);
           
-          const response = await fetch(proxyUrl);
+          const response = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+          });
           
           if (!response.ok) {
             console.warn(`Failed to fetch from ${retailer.name}: ${response.statusText}`);
@@ -44,7 +50,7 @@ export class PriceScraperService {
           const html = await response.text();
           
           // Extract price and stock status from the HTML
-          const { price, status } = this.extractPriceAndStatus(html, retailer.id);
+          const { price, status } = await this.extractPriceAndStatus(html, retailer.id);
           
           if (price > 0) {
             scrapedPrices.push({
@@ -56,6 +62,8 @@ export class PriceScraperService {
               url: searchUrl
             });
             console.log(`Found price at ${retailer.name}: £${price}, Status: ${status}`);
+          } else {
+            console.log(`No valid price found at ${retailer.name}`);
           }
         } catch (retailerError) {
           console.error(`Error scraping from ${retailer.name}:`, retailerError);
@@ -109,7 +117,8 @@ export class PriceScraperService {
   }
   
   // Extract price and stock status from HTML based on retailer-specific selectors
-  private static extractPriceAndStatus(html: string, retailerId: string): { price: number, status: StockStatus } {
+  private static async extractPriceAndStatus(html: string, retailerId: string): Promise<{ price: number, status: StockStatus }> {
+    // Create a DOM parser to extract data from HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     
@@ -145,13 +154,13 @@ export class PriceScraperService {
         
       case "currys":
         // Currys price extraction
-        const currysPriceElement = doc.querySelector('.price');
+        const currysPriceElement = doc.querySelector('.product-price');
         if (currysPriceElement) {
           const priceText = currysPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
           price = parseFloat(priceText);
           
           // Check stock status
-          const stockElement = doc.querySelector('.stockStatus');
+          const stockElement = doc.querySelector('.stock-message');
           if (stockElement) {
             const text = stockElement.textContent?.toLowerCase() || '';
             if (text.includes('in stock')) {
@@ -189,13 +198,13 @@ export class PriceScraperService {
         
       case "overclockers":
         // Overclockers price extraction
-        const ocukPriceElement = doc.querySelector('.product--price');
+        const ocukPriceElement = doc.querySelector('.price');
         if (ocukPriceElement) {
           const priceText = ocukPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
           price = parseFloat(priceText);
           
           // Check stock status
-          const stockElement = doc.querySelector('.availability--text');
+          const stockElement = doc.querySelector('.stock-availability-status');
           if (stockElement) {
             const text = stockElement.textContent?.toLowerCase() || '';
             if (text.includes('in stock')) {
@@ -217,7 +226,7 @@ export class PriceScraperService {
           price = parseFloat(priceText);
           
           // Check stock status
-          const stockElement = doc.querySelector('.stock');
+          const stockElement = doc.querySelector('.availability');
           if (stockElement) {
             const text = stockElement.textContent?.toLowerCase() || '';
             if (text.includes('in stock')) {
@@ -233,13 +242,13 @@ export class PriceScraperService {
         
       case "novatech":
         // Novatech price extraction
-        const novatechPriceElement = doc.querySelector('.product-price');
+        const novatechPriceElement = doc.querySelector('.current-price');
         if (novatechPriceElement) {
           const priceText = novatechPriceElement.textContent?.replace(/[^0-9.]/g, '') || '0';
           price = parseFloat(priceText);
           
           // Check stock status
-          const stockElement = doc.querySelector('.stock-info');
+          const stockElement = doc.querySelector('.availability');
           if (stockElement) {
             const text = stockElement.textContent?.toLowerCase() || '';
             if (text.includes('in stock')) {

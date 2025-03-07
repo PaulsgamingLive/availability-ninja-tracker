@@ -7,7 +7,7 @@ import { retailers } from "@/data/retailers";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatRelativeTime } from "@/utils/stockUtils";
 import StockStatusBadge from "./StockStatusBadge";
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react';
 import { PriceScraperService } from '@/services/PriceScraperService';
 import { toast } from "@/hooks/use-toast";
 
@@ -20,11 +20,14 @@ interface ProductDetailDialogProps {
 const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogProps) => {
   const [activeTab, setActiveTab] = useState('availability');
   const [isLoading, setIsLoading] = useState(false);
+  const [scrapingError, setScrapingError] = useState<string | null>(null);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
 
   // When the product prop changes, update our local state
   if (product && (!currentProduct || product.id !== currentProduct.id)) {
     setCurrentProduct(product);
+    // Reset error state on new product
+    setScrapingError(null);
   }
 
   if (!currentProduct) {
@@ -35,6 +38,8 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
     if (!currentProduct || isLoading) return;
     
     setIsLoading(true);
+    setScrapingError(null);
+    
     toast({
       title: "Scraping prices...",
       description: `Getting latest prices for ${currentProduct.name}`,
@@ -47,7 +52,7 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
         currentProduct.name
       );
       
-      if (result.success && result.prices) {
+      if (result.success && result.prices && result.prices.length > 0) {
         // Update our local copy of the product with the new prices
         setCurrentProduct({
           ...currentProduct,
@@ -60,18 +65,22 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
           duration: 3000,
         });
       } else {
+        const errorMessage = result.error || "No prices found. Retailers may have blocked scraping.";
+        setScrapingError(errorMessage);
         toast({
-          title: "Error",
-          description: result.error || "Failed to update prices",
+          title: "Warning",
+          description: errorMessage,
           variant: "destructive",
           duration: 5000,
         });
       }
     } catch (error) {
-      console.error("Error refreshing prices:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Error refreshing prices:", errorMessage);
+      setScrapingError(errorMessage);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: errorMessage,
         variant: "destructive",
         duration: 5000,
       });
@@ -143,14 +152,31 @@ const ProductDetailDialog = ({ product, isOpen, onClose }: ProductDetailDialogPr
               </Button>
             </div>
             
+            {scrapingError && (
+              <div className="bg-destructive/10 border border-destructive/30 p-3 rounded-md flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-destructive">Error Scraping Prices</h4>
+                  <p className="text-sm text-muted-foreground">{scrapingError}</p>
+                  <p className="text-xs mt-1">Note: Web scraping may be blocked by some retailers or require a backend service.</p>
+                </div>
+              </div>
+            )}
+            
             <div className="grid gap-3">
-              {currentProduct.prices.map((price, idx) => (
-                <RetailerStockInfo 
-                  key={`${price.retailerId}-${idx}`} 
-                  price={price} 
-                  retailerName={retailers.find(r => r.id === price.retailerId)?.name || 'Unknown'} 
-                />
-              ))}
+              {currentProduct.prices.length > 0 ? (
+                currentProduct.prices.map((price, idx) => (
+                  <RetailerStockInfo 
+                    key={`${price.retailerId}-${idx}`} 
+                    price={price} 
+                    retailerName={retailers.find(r => r.id === price.retailerId)?.name || 'Unknown'} 
+                  />
+                ))
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  No price information available. Click "Refresh Prices" to check current prices.
+                </div>
+              )}
             </div>
           </TabsContent>
           
